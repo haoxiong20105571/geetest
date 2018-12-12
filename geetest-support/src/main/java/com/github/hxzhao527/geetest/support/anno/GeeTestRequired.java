@@ -12,10 +12,7 @@ import java.lang.annotation.Target;
 public @interface GeeTestRequired {
     /**
      * 设置极验参数在请求中的字段名
-     * 默认使用极验官方sdk中的配置
-     * 获取方式是  HttpServletRequest.getParameter
-     * 如果请求是 GET 或者 POST-FormUrlEncoded, 可以维持原样
-     * 如果请求是 POST-application/jsono 这种, 需要前端配合, 将极验的参数改为url-query-param形式传递
+     * 获取方式是 HttpServletRequest.getParameter
      *
      * @return 字段名
      */

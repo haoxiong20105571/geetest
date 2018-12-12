@@ -3,6 +3,7 @@ package com.github.hxzhao527.geetest.support.aop;
 import com.alibaba.fastjson.JSONObject;
 import com.github.hxzhao527.geetest.support.GeeTestClient;
 import com.github.hxzhao527.geetest.support.anno.GeeTestRequired;
+import com.github.hxzhao527.geetest.support.exception.GeeException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -27,9 +29,13 @@ public class GeeTestAspect {
 
     private final GeeTestClient geeTestClient;
 
+    private Boolean ifInvalidThrowException;
+
     @Autowired
-    public GeeTestAspect(GeeTestClient geeTestClient) {
+    public GeeTestAspect(GeeTestClient geeTestClient,
+                         @Value("#{new Boolean('${geetest.ifInvalidThrowException:false}')}") Boolean ifInvalidThrowException) {
         this.geeTestClient = geeTestClient;
+        this.ifInvalidThrowException = ifInvalidThrowException;
     }
 
     @Around("@annotation(com.github.hxzhao527.geetest.support.anno.GeeTestRequired)")
@@ -40,7 +46,7 @@ public class GeeTestAspect {
 
         if (geeTestRequiredAnno == null) {
             // geetest注解丢了? 切面炸了?
-            return new Response(Integer.MAX_VALUE, "GeeTestRequired annotation falied?");
+            return returnOrThrow(new Response(Integer.MAX_VALUE, "GeeTestRequired annotation falied?"));
         }
         HttpServletRequest httpServletRequest = getCurrentRequest();
         if (httpServletRequest == null) {
@@ -64,10 +70,17 @@ public class GeeTestAspect {
         }
         if (StringUtils.isBlank(geeTestRequiredAnno.responseMsg())) {
             // 没有自定义返回体
-            return new Response(geeTestRequiredAnno.code());
+            return returnOrThrow(new Response(geeTestRequiredAnno.code()));
         }
         // 自定义返回结果
         return JSONObject.parseObject(geeTestRequiredAnno.responseMsg());
+    }
+
+    private Response returnOrThrow(Response resp) {
+        if (ifInvalidThrowException) {
+            throw new GeeException(resp.getMsg());
+        }
+        return resp;
     }
 
     // 取 request
