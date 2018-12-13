@@ -22,13 +22,6 @@ public @interface GeeTestRequired {
 
     String seccode() default GeeTestClient.fn_geetest_seccode;
 
-    /**
-     * 错误码
-     * 默认返回结构是 {"code":, "msg": }
-     *
-     * @return 极验不通过时的错误码
-     */
-    int code() default Integer.MAX_VALUE;
 
     /**
      * 自定义返回体
@@ -36,7 +29,7 @@ public @interface GeeTestRequired {
      *
      * @return 自定义返回
      */
-    String responseMsg() default "";
+    String responseMsg();
 
     /**
      * 字段数据格式
